@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <menu>
   <item>
-    <path>civicrm/contact/orgdedupe</path>
-    <page_callback>CRM_Orgdedupe_Page_MyPage1</page_callback>
+    <path>civicrm/orgdedupe</path>
+    <page_callback>CRM_Orgdedupe_Page_List</page_callback>
     <title>Organisation Name De-duplicator</title>
     <access_arguments>merge duplicate contacts</access_arguments>
   </item>

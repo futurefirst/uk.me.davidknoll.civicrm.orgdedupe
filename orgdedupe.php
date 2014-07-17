@@ -2,6 +2,8 @@
 
 require_once 'orgdedupe.civix.php';
 
+const OD_SUBMENU_LABEL = 'Contact Validation';
+
 /**
  * Implementation of hook_civicrm_config
  *
@@ -107,31 +109,58 @@ function orgdedupe_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _orgdedupe_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
-/*
- * Add entry to the navigation menu
- * Following example: https://github.com/JohnFF/UK-Phone-Number-Validator/blob/master/phonevalidator.php
- */
-function orgdedupe_civicrm_navigationMenu(&$params) {
-  // Get the ID of the Contacts menu
+function orgdedupe_civicrm_navigationMenu_getSubmenuKey( &$params, $contactMenuId ){
+  foreach($params[$contactMenuId]['child'] as $key => $item){
+    if ($item['attributes']['label'] == OD_SUBMENU_LABEL){
+      return $item['attributes']['navID'];
+    }       
+  }
+
+  return NULL;
+}
+
+function orgdedupe_civicrm_navigationMenu( &$params ) {
+  // get the id of the Contact Menu
   $contactMenuId = CRM_Core_DAO::getFieldValue('CRM_Core_BAO_Navigation', 'Contacts', 'id', 'name');
 
-  // skip adding menu if there is no Contacts menu
-  if ($contactMenuId) {
-    // get the maximum key under Contacts menu
-    $maxKey = max(array_keys($params[$contactMenuId]['child']));
-    $params[$contactMenuId]['child'][$maxKey+1] = array(
-      'attributes' => array(
-        'label' => 'Organisation Name De-duplicator',
-        'name' => 'Organisation Name De-duplicator',
-        'url' => 'civicrm/contact/orgdedupe',
-        'permission' => 'merge duplicate contacts',
-        'operator' => NULL,
-        'separator' => TRUE,
-        'parentID' => $contactMenuId,
-        'navID' => $maxKey+1,
-        'active' => 1
+  // Add the "Contact Validation" submenu to 'Contacts', if it doesn't alrady exist
+  $subMenuId = orgdedupe_civicrm_navigationMenu_getSubmenuKey($params, $contactMenuId);
+    
+  if (!isset($subMenuId)){
+    //  Get the maximum key of $params
+    $maxKey = max( array_keys($params[$contactMenuId]['child']));
+
+    $subMenuId = $maxKey+1;
+
+    $params[$contactMenuId]['child'][$subMenuId] = array (
+      'attributes' => array (
+         'label'      => OD_SUBMENU_LABEL,
+         'name'       => OD_SUBMENU_LABEL,
+         'url'        => null,
+         'permission' => null,
+         'operator'   => null,
+         'separator'  => null,
+         'parentID'   => $contactMenuId,
+         'navID'      => $subMenuId,
+         'active'     => 1
       )
     );
   }
-}
 
+  $orgdedupeKey = max( array_keys($params[$contactMenuId]['child'][$subMenuId]['child']))+1;
+
+  // get the maximum key under Contacts menu
+  $params[$contactMenuId]['child'][$subMenuId]['child'][$orgdedupeKey] = array (
+    'attributes' => array (
+      'label' => 'Organisation Name De-duplicator',
+      'name' => 'Organisation Name De-duplicator',
+      'url' => 'civicrm/orgdedupe',
+      'permission' => 'merge duplicate contacts',
+      'operator' => NULL,
+      'separator' => FALSE,
+      'parentID' => $subMenuId,
+      'navID' => $orgdedupeKey,
+      'active' => 1
+    )
+  );
+}
