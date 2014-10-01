@@ -1,18 +1,18 @@
 <div id="orgdedupe-pairs">
-  <h3 id="orgdedupe-pairs-header">Possible pairs</h3>
+  <h3 id="orgdedupe-pairs-header">{ts}Possible pairs{/ts}</h3>
   <table id="orgdedupe-pairs-table">
     <thead>
-      <tr><th>Contact ID A</th><th>Display name A</th><th>Contact ID B</th><th>Display name B</th><th>Action</th></tr>
+      <tr><th>{ts}Contact ID A{/ts}</th><th>{ts}Display name A{/ts}</th><th>{ts}Contact ID B{/ts}</th><th>{ts}Display name B{/ts}</th><th>{ts}Action{/ts}</th></tr>
     </thead>
     <tbody>
 
       {foreach from=$data item=eachRecord}
         <tr>
-          <td><a title="View contact {$eachRecord.id_a}" href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$eachRecord.id_a`"}">{$eachRecord.id_a}</a></td>
+          <td><a title="{ts}View contact{/ts} {$eachRecord.id_a}" href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$eachRecord.id_a`"}">{$eachRecord.id_a}</a></td>
           <td>{$eachRecord.display_name_a}</td>
-          <td><a title="View contact {$eachRecord.id_b}" href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$eachRecord.id_b`"}">{$eachRecord.id_b}</a></td>
+          <td><a title="{ts}View contact{/ts} {$eachRecord.id_b}" href="{crmURL p='civicrm/contact/view' q="reset=1&cid=`$eachRecord.id_b`"}">{$eachRecord.id_b}</a></td>
           <td>{$eachRecord.display_name_b}</td>
-          <td><a title="Merge these two organisation records" href="{crmURL p='civicrm/contact/merge' q="reset=1&cid=`$eachRecord.id_a`&oid=`$eachRecord.id_b`&action=update&rgid=16"}">Merge</a></td>
+          <td><a title="{ts}Merge these two organisation records{/ts}" href="{crmURL p='civicrm/contact/merge' q="reset=1&cid=`$eachRecord.id_a`&oid=`$eachRecord.id_b`&action=update&rgid=16"}">{ts}Merge{/ts}</a></td>
         </tr>
       {/foreach}
 
@@ -45,7 +45,7 @@
           {'bSortable': true,  'aTargets': [COL_NAME_B]},
           {'bSortable': false, 'aTargets': ['_all']},
         ],
-        //'aaSorting':    [[COL_ID_A, 'asc']],
+        'aaSorting':    [[COL_NAME_A, 'asc']],
         'bFilter':      false,
         'bInfo':        false,
         'bPaginate':    true,

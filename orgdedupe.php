@@ -109,31 +109,46 @@ function orgdedupe_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _orgdedupe_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
-function orgdedupe_civicrm_navigationMenu_getSubmenuKey( &$params, $contactMenuId ){
-  foreach($params[$contactMenuId]['child'] as $key => $item){
-    if ($item['attributes']['label'] == OD_SUBMENU_LABEL){
+/**
+ * Used by orgdedupe_civicrm_navigationMenu, finds the submenu we want to add to.
+ *
+ * @param array $params
+ *   Navigation menu array as passed to orgdedupe_civicrm_navigationMenu
+ * @param int $contactMenuId
+ *   navID of menu within which to search
+ * @return int|null
+ *   navID of our submenu, or NULL if not found
+ */
+function orgdedupe_civicrm_navigationMenu_getSubmenuKey(&$params, $contactMenuId) {
+  foreach ($params[$contactMenuId]['child'] as $key => $item) {
+    if ($item['attributes']['label'] == OD_SUBMENU_LABEL) {
       return $item['attributes']['navID'];
-    }       
+    }
   }
 
   return NULL;
 }
 
-function orgdedupe_civicrm_navigationMenu( &$params ) {
+/**
+ * Implementation of hook_civicrm_navigationMenu
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
+ */
+function orgdedupe_civicrm_navigationMenu(&$params) {
   // get the id of the Contact Menu
   $contactMenuId = CRM_Core_DAO::getFieldValue('CRM_Core_BAO_Navigation', 'Contacts', 'id', 'name');
 
   // Add the "Contact Validation" submenu to 'Contacts', if it doesn't alrady exist
   $subMenuId = orgdedupe_civicrm_navigationMenu_getSubmenuKey($params, $contactMenuId);
     
-  if (!isset($subMenuId)){
-    //  Get the maximum key of $params
-    $maxKey = max( array_keys($params[$contactMenuId]['child']));
+  if (!isset($subMenuId)) {
+    // Get the maximum key of $params
+    $maxKey = max(array_keys($params[$contactMenuId]['child']));
 
     $subMenuId = $maxKey+1;
 
-    $params[$contactMenuId]['child'][$subMenuId] = array (
-      'attributes' => array (
+    $params[$contactMenuId]['child'][$subMenuId] = array(
+      'attributes' => array(
          'label'      => OD_SUBMENU_LABEL,
          'name'       => OD_SUBMENU_LABEL,
          'url'        => null,
@@ -142,25 +157,25 @@ function orgdedupe_civicrm_navigationMenu( &$params ) {
          'separator'  => null,
          'parentID'   => $contactMenuId,
          'navID'      => $subMenuId,
-         'active'     => 1
-      )
+         'active'     => 1,
+      ),
     );
   }
 
-  $orgdedupeKey = max( array_keys($params[$contactMenuId]['child'][$subMenuId]['child']))+1;
+  $orgdedupeKey = max(array_keys($params[$contactMenuId]['child'][$subMenuId]['child']))+1;
 
-  // get the maximum key under Contacts menu
-  $params[$contactMenuId]['child'][$subMenuId]['child'][$orgdedupeKey] = array (
-    'attributes' => array (
-      'label' => 'Organisation Name De-duplicator',
-      'name' => 'Organisation Name De-duplicator',
-      'url' => 'civicrm/orgdedupe',
+  // Get the maximum key under Contacts menu
+  $params[$contactMenuId]['child'][$subMenuId]['child'][$orgdedupeKey] = array(
+    'attributes' => array(
+      'label'      => ts('Organisation Name De-duplicator'),
+      'name'       => ts('Organisation Name De-duplicator'),
+      'url'        => 'civicrm/orgdedupe',
       'permission' => 'merge duplicate contacts',
-      'operator' => NULL,
-      'separator' => FALSE,
-      'parentID' => $subMenuId,
-      'navID' => $orgdedupeKey,
-      'active' => 1
-    )
+      'operator'   => NULL,
+      'separator'  => FALSE,
+      'parentID'   => $subMenuId,
+      'navID'      => $orgdedupeKey,
+      'active'     => 1,
+    ),
   );
 }

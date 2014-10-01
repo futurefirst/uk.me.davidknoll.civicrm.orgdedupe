@@ -1,8 +1,8 @@
 <div id="orgdedupe-names">
-  <h3 id="orgdedupe-names-header">Possibly duplicated organisations</h3>
+  <h3 id="orgdedupe-names-header">{ts}Possibly duplicated organisations{/ts}</h3>
   <table id="orgdedupe-names-table">
     <thead>
-      <tr><th>Normalised name</th><th>Number of duplicates</th><th>Contact IDs</th></tr>
+      <tr><th>{ts}Normalised name{/ts}</th><th>{ts}Number of duplicates{/ts}</th><th>{ts}Contact IDs{/ts}</th></tr>
     </thead>
     <tbody>
 
@@ -39,7 +39,7 @@
           {'bSortable': true,  'aTargets': [COL_COUNT]},
           {'bSortable': false, 'aTargets': ['_all']},
         ],
-        //'aaSorting':    [[COL_COUNT, 'desc']],
+        'aaSorting':    [[COL_NAME, 'asc']],
         'bFilter':      false,
         'bInfo':        false,
         'bPaginate':    true,

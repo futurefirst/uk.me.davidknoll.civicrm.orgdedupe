@@ -57,13 +57,20 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
   protected static function constructQueryDupedNames() {
     $replace = self::constructReplace('`display_name`', self::$displayNameReplacements);
     return "
-      SELECT $replace AS `replaced_name`, COUNT(`display_name`) AS `count`,
-      GROUP_CONCAT(DISTINCT `id` ORDER BY `id` ASC SEPARATOR ', ') AS `dupeids`
-      FROM `civicrm_contact`
-      WHERE `contact_type` LIKE '%Organization%' AND `is_deleted` IS FALSE
-      GROUP BY `replaced_name`
+      SELECT $replace              AS `replaced_name`,
+             COUNT(`display_name`) AS `count`,
+             GROUP_CONCAT(DISTINCT `id` ORDER BY `id` ASC SEPARATOR ', ') AS `dupeids`
+
+        FROM `civicrm_contact`
+
+       WHERE `contact_type` LIKE '%Organization%'
+         AND `is_deleted`   IS   NOT TRUE
+
+    GROUP BY `replaced_name`
       HAVING COUNT(`display_name`) > 1
-      ORDER BY `count` DESC, `replaced_name` ASC
+
+    ORDER BY `count`         DESC,
+             `replaced_name` ASC
     ";
   }
 
@@ -79,11 +86,13 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
     $replace = self::constructReplace('`display_name`', self::$displayNameReplacements);
     $replacedName = CRM_Core_DAO::escapeString($replacedName);
     return "
-      SELECT `id`, `display_name`
-      FROM `civicrm_contact`
-      WHERE `contact_type` LIKE '%Organization%' AND `is_deleted` IS FALSE
-      AND $replace = '$replacedName'
-      ORDER BY id ASC
+      SELECT `id`,
+             `display_name`
+        FROM `civicrm_contact`
+       WHERE `contact_type` LIKE '%Organization%'
+         AND `is_deleted`   IS   NOT TRUE
+         AND $replace       =    '$replacedName'
+    ORDER BY `id` ASC
     ";
   }
 
@@ -97,8 +106,8 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
     while ($dao->fetch()) {
       $this->dupedNames[] = array(
         'replaced_name' => $dao->replaced_name,
-        'count' => $dao->count,
-        'dupeids' => $dao->dupeids,
+        'count'         => $dao->count,
+        'dupeids'       => $dao->dupeids,
       );
       $this->orgCount++;
       $this->dupeCount += $dao->count;
@@ -124,9 +133,9 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
     $jRow = 1;
     while ($jRow < $iRow) {
       $this->possPairs[] = array(
-        'id_a' => $dupesForName[$jRow-1]['id'],
+        'id_a'           => $dupesForName[$jRow-1]['id'],
         'display_name_a' => $dupesForName[$jRow-1]['display_name'],
-        'id_b' => $dupesForName[$jRow]['id'],
+        'id_b'           => $dupesForName[$jRow]['id'],
         'display_name_b' => $dupesForName[$jRow]['display_name'],
       );
       $jRow++;
