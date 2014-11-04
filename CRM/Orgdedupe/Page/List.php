@@ -1,4 +1,11 @@
 <?php
+/**
+ * Organisation Name De-duplicator
+ *
+ * @author    David Knoll <david@futurefirst.org.uk>
+ * @copyright 2014 Future First
+ * @license   http://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0
+ */
 
 require_once 'CRM/Core/Page.php';
 
@@ -7,8 +14,11 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
   // Prefix to variable names assigned for the template
   const PREFIX = 'orgdedupe_';
 
-  // Replacements to perform on organisation names,
-  // in order that reasonably similar ones come out the same.
+  /**
+   * @var array $displayNameReplacements
+   *   Replacements to perform on organisation names,
+   *   in order that reasonably similar ones come out the same.
+   */
   protected static $displayNameReplacements = array(
     '&'   => 'and',
     '\''  => '',
@@ -18,10 +28,20 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
     'inc' => '',
   );
 
-  protected $dupedNames = array();  // Names that have possible duplicates
-  protected $possPairs = array();   // Pairs of duplicate records, for all those names
-  protected $orgCount = 0;          // Count organisations that have possible duplicates
-  protected $dupeCount = 0;         // Count all the duplicates they have
+  /**
+   * @var array $dupedNames
+   *   Names that have possible duplicates
+   * @var array $possPairs
+   *   Pairs of duplicate records, for all those names
+   * @var int $orgCount
+   *   Count organisations that have possible duplicates
+   * @var int $dupeCount
+   *   Count all the duplicates they have
+   */
+  protected $dupedNames = array();
+  protected $possPairs  = array();
+  protected $orgCount   = 0;
+  protected $dupeCount  = 0;
 
   /**
    * Construct the nested REPLACE for queries involving the normalised name.
@@ -86,9 +106,13 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
     $replace = self::constructReplace('`display_name`', self::$displayNameReplacements);
     $replacedName = CRM_Core_DAO::escapeString($replacedName);
     return "
-      SELECT `id`,
-             `display_name`
+      SELECT `civicrm_contact`.`id`           AS `id`,
+             `civicrm_contact`.`display_name` AS `display_name`,
+             `civicrm_address`.`postal_code`  AS `postal_code`
         FROM `civicrm_contact`
+   LEFT JOIN `civicrm_address`
+          ON `civicrm_address`.`contact_id`  = `civicrm_contact`.`id`
+         AND `civicrm_address`.`is_primary` IS TRUE
        WHERE `contact_type` LIKE '%Organization%'
          AND `is_deleted`   IS   NOT TRUE
          AND $replace       =    '$replacedName'
@@ -116,6 +140,11 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
 
   /**
    * Construct possible pairs of duplicate records for a given normalised name.
+   *
+   * Excludes pairs that have previously been marked as not duplicates.
+   *
+   * @param string $replacedName
+   *   Normalised name for which to retrieve possible pairs of duplicates.
    */
   protected function retrievePairsForName($replacedName) {
     $query = self::constructQueryIdsForName($replacedName);
@@ -123,22 +152,34 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
     $dupesForName = array();
 
     // Copy duplicates for that name into an array.
-    $iRow = 0;
     while ($dao->fetch()) {
-      $dupesForName[$iRow] = array('id' => $dao->id, 'display_name' => $dao->display_name);
-      $iRow++;
+      $dupesForName[] = array(
+        'id'           => $dao->id,
+        'display_name' => $dao->display_name,
+        'postal_code'  => $dao->postal_code,
+      );
     }
+    $countDupes = count($dupesForName);
 
     // Add as a pair, each duplicate with the one before it.
-    $jRow = 1;
-    while ($jRow < $iRow) {
+    for ($countPairs = 1; $countPairs < $countDupes; $countPairs++) {
+      // Check whether this pair has been marked as non-duplicate
+      $exception = new CRM_Dedupe_DAO_Exception();
+      // Exception pairs are stored with contact_id2 > contact_id1, make sure
+      $exception->contact_id1 = min($dupesForName[$countPairs-1]['id'], $dupesForName[$countPairs]['id']);
+      $exception->contact_id2 = max($dupesForName[$countPairs-1]['id'], $dupesForName[$countPairs]['id']);
+      if ($exception->find()) {
+        continue;
+      }
+
       $this->possPairs[] = array(
-        'id_a'           => $dupesForName[$jRow-1]['id'],
-        'display_name_a' => $dupesForName[$jRow-1]['display_name'],
-        'id_b'           => $dupesForName[$jRow]['id'],
-        'display_name_b' => $dupesForName[$jRow]['display_name'],
+        'id_a'           => $dupesForName[$countPairs-1]['id'],
+        'display_name_a' => $dupesForName[$countPairs-1]['display_name'],
+        'postal_code_a'  => $dupesForName[$countPairs-1]['postal_code'],
+        'id_b'           => $dupesForName[$countPairs]['id'],
+        'display_name_b' => $dupesForName[$countPairs]['display_name'],
+        'postal_code_b'  => $dupesForName[$countPairs]['postal_code'],
       );
-      $jRow++;
     }
   }
 
@@ -147,7 +188,7 @@ class CRM_Orgdedupe_Page_List extends CRM_Core_Page {
    */
   public function run() {
     $this->retrieveNamesAndCounts();
-    foreach($this->dupedNames as $rec) {
+    foreach ($this->dupedNames as $rec) {
       $this->retrievePairsForName($rec['replaced_name']);
     }
 
