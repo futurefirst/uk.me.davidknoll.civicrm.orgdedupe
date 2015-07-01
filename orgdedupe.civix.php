@@ -285,7 +285,7 @@ function _orgdedupe_civix_insert_navigation_menu(&$menu, $path, $item, $parentId
     $first = array_shift($path);
     foreach ($menu as $key => &$entry) {
       if ($entry['attributes']['name'] == $first) {
-        if (!$entry['child']) $entry['child'] = array();
+        if (empty($entry['child'])) $entry['child'] = array();
         $found = _orgdedupe_civix_insert_navigation_menu($entry['child'], implode('/', $path), $item, $key);
       }
     }

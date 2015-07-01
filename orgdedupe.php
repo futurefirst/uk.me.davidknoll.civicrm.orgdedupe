@@ -115,16 +115,24 @@ function orgdedupe_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
  */
 function orgdedupe_civicrm_navigationMenu(&$params) {
+  $submenu = array(
+    'name'       => OD_SUBMENU_LABEL,
+    'url'        => NULL,
+    'permission' => NULL,
+    'operator'   => NULL,
+  );
+
   $entry = array(
     'name'       => ts('Organisation Name De-duplicator'),
     'url'        => 'civicrm/orgdedupe',
     'permission' => 'merge duplicate contacts',
+    'operator'   => NULL,
   );
 
   $submenu_already = _orgdedupe_civix_insert_navigation_menu($params, 'Contacts/' . OD_SUBMENU_LABEL, $entry);
 
   if (!$submenu_already) {
-    _orgdedupe_civix_insert_navigation_menu($params, 'Contacts', array('name' => OD_SUBMENU_LABEL));
+    _orgdedupe_civix_insert_navigation_menu($params, 'Contacts', $submenu);
     _orgdedupe_civix_insert_navigation_menu($params, 'Contacts/' . OD_SUBMENU_LABEL, $entry);
   }
 }
